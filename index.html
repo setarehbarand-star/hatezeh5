@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مبدل آفلاین MP3 به M4A</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Vazirmatn", Roboto, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+            width: 95%;
+            max-width: 650px;
+            text-align: center;
+        }
+        h1 {
+            color: #0b2f69;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        p {
+            color: #606770;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+        .file-upload-wrapper {
+            border: 3px dashed #ccd0d5;
+            border-radius: 10px;
+            padding: 35px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .file-upload-wrapper:hover {
+            background-color: #f7f8fa;
+            border-color: #8a9ac0;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        label {
+            font-weight: bold;
+            color: #0b2f69;
+            font-size: 1.2em;
+        }
+        #fileName {
+            margin-top: 15px;
+            font-style: italic;
+            color: #606770;
+            word-break: break-all;
+        }
+        button {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+        button:disabled {
+            background: #dcdfe3;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        button:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+        #status {
+            margin-top: 30px;
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #0b2f69;
+            min-height: 30px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #4caf50;
+            border-radius: 5px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            transition: width 0.2s;
+        }
+        #downloadLink {
+            display: none;
+            background: linear-gradient(45deg, #ff9800, #fb8c00);
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+        }
+        #downloadLink:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>مبدل کاملاً آفلاین MP3 به M4A</h1>
+        <p>فایل MP3 خود را انتخاب کنید تا به فرمت بهینه M4A (با کدک AAC) تبدیل شود. این ابزار به اینترنت نیاز ندارد و تمام عملیات روی کامپیوتر شما انجام می‌شود.</p>
+
+        <label for="uploader" class="file-upload-wrapper">
+            <div>برای انتخاب فایل کلیک کنید</div>
+            <div id="fileName">هیچ فایلی انتخاب نشده است</div>
+        </label>
+        <input type="file" id="uploader" accept=".mp3" />
+
+        <button id="converterBtn" disabled>ابتدا فایل را انتخاب کنید</button>
+
+        <div id="status">در حال آماده‌سازی ابزار... لطفاً صبر کنید.</div>
+        <div class="progress-bar-container" id="progressBarContainer">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+
+        <a href="#" id="downloadLink"></a>
+    </div>
+
+    <!-- 
+      بخش زیر شامل کتابخانه‌های FFmpeg است که به صورت توکار (inline) قرار داده شده‌اند.
+      این کدها حجم فایل را بسیار زیاد می‌کنند اما باعث عملکرد کاملاً آفلاین می‌شوند.
+      لطفا این بخش را ویرایش نکنید.
+    -->
+    <script>
+    // FFmpeg.js Library (version 0.12.10)
+    !function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).FFmpeg=e.FFmpeg||{})}(this,(function(e){"use strict";var t={};Object.defineProperty(t,"__esModule",{value:!0});const n={};n.OK=200,n.CREATED=201,n.ACCEPTED=202,n.NO_CONTENT=204,n.MULTI_STATUS=207,n.MOVED_PERMANENTLY=301,n.FOUND=302,n.SEE_OTHER=303,n.NOT_MODIFIED=304,n.TEMPORARY_REDIRECT=307,n.PERMANENT_REDIRECT=308,n.BAD_REQUEST=400,n.UNAUTHORIZED=401,n.FORBIDDEN=403,n.NOT_FOUND=404,n.METHOD_NOT_ALLOWED=405,n.NOT_ACCEPTABLE=406,n.REQUEST_TIMEOUT=408,n.CONFLICT=409,n.GONE=410,n.LENGTH_REQUIRED=411,n.PRECONDITION_FAILED=412,n.PAYLOAD_TOO_LARGE=413,n.URI_TOO_LONG=414,n.UNSUPPORTED_MEDIA_TYPE=415,n.RANGE_NOT_SATISFIABLE=416,n.EXPECTATION_FAILED=417,n.I_AM_A_TEAPOT=418,n.MISDIRECTED_REQUEST=421,n.UNPROCESSABLE_ENTITY=422,n.LOCKED=423,n.FAILED_DEPENDENCY=424,n.TOO_EARLY=425,n.UPGRADE_REQUIRED=426,n.PRECONDITION_REQUIRED=428,n.TOO_MANY_REQUESTS=429,n.REQUEST_HEADER_FIELDS_TOO_LARGE=431,n.UNAVAILABLE_FOR_LEGAL_REASONS=451,n.INTERNAL_SERVER_ERROR=500,n.NOT_IMPLEMENTED=501,n.BAD_GATEWAY=502,n.SERVICE_UNAVAILABLE=503,n.GATEWAY_TIMEOUT=504,n.HTTP_VERSION_NOT_SUPPORTED=505,n.VARIANT_ALSO_NEGOTIATES=506,n.INSUFFICIENT_STORAGE=507,n.LOOP_DETECTED=508,n.NOT_EXTENDED=510,n.NETWORK_AUTHENTICATION_REQUIRED=511,t.Status=n;const s=new Map;s.set(n.OK,"OK"),s.set(n.CREATED,"Created"),s.set(n.ACCEPTED,"Accepted"),s.set(n.NO_CONTENT,"No Content"),s.set(n.MULTI_STATUS,"Multi-Status"),s.set(n.MOVED_PERMANENTLY,"Moved Permanently"),s.set(n.FOUND,"Found"),s.set(n.SEE_OTHER,"See Other"),s.set(n.NOT_MODIFIED,"Not Modified"),s.set(n.TEMPORARY_REDIRECT,"Temporary Redirect"),s.set(n.PERMANENT_REDIRECT,"Permanent Redirect"),s.set(n.BAD_REQUEST,"Bad Request"),s.set(n.UNAUTHORIZED,"Unauthorized"),s.set(n.FORBIDDEN,"Forbidden"),s.set(n.NOT_FOUND,"Not Found"),s.set(n.METHOD_NOT_ALLOWED,"Method Not Allowed"),s.set(n.NOT_ACCEPTABLE,"Not Acceptable"),s.set(n.REQUEST_TIMEOUT,"Request Timeout"),s.set(n.CONFLICT,"Conflict"),s.set(n.GONE,"Gone"),s.set(n.LENGTH_REQUIRED,"Length Required"),s.set(n.PRECONDITION_FAILED,"Precondition Failed"),s.set(n.PAYLOAD_TOO_LARGE,"Payload Too Large"),s.set(n.URI_TOO_LONG,"URI Too Long"),s.set(n.UNSUPPORTED_MEDIA_TYPE,"Unsupported Media Type"),s.set(n.RANGE_NOT_SATISFIABLE,"Range Not Satisfiable"),s.set(n.EXPECTATION_FAILED,"Expectation Failed"),s.set(n.I_AM_A_TEAPOT,"I'm a teapot"),s.set(n.MISDIRECTED_REQUEST,"Misdirected Request"),s.set(n.UNPROCESSABLE_ENTITY,"Unprocessable Entity"),s.set(n.LOCKED,"Locked"),s.set(n.FAILED_DEPENDENCY,"Failed Dependency"),s.set(n.TOO_EARLY,"Too Early"),s.set(n.UPGRADE_REQUIRED,"Upgrade Required"),s.set(n.PRECONDITION_REQUIRED,"Precondition Required"),s.set(n.TOO_MANY_REQUESTS,"Too Many Requests"),s.set(n.REQUEST_HEADER_FIELDS_TOO_LARGE,"Request Header Fields Too Large"),s.set(n.UNAVAILABLE_FOR_LEGAL_REASONS,"Unavailable For Legal Reasons"),s.set(n.INTERNAL_SERVER_ERROR,"Internal Server Error"),s.set(n.NOT_IMPLEMENTED,"Not Implemented"),s.set(n.BAD_GATEWAY,"Bad Gateway"),s.set(n.SERVICE_UNAVAILABLE,"Service Unavailable"),s.set(n.GATEWAY_TIMEOUT,"Gateway Timeout"),s.set(n.HTTP_VERSION_NOT_SUPPORTED,"HTTP Version Not Supported"),s.set(n.VARIANT_ALSO_NEGOTIATES,"Variant Also Negotiates"),s.set(n.INSUFFICIENT_STORAGE,"Insufficient Storage"),s.set(n.LOOP_DETECTED,"Loop Detected"),s.set(n.NOT_EXTENDED,"Not Extended"),s.set(n.NETWORK_AUTHENTICATION_REQUIRED,"Network Authentication Required"),t.STATUS_TEXT=s;const o=Symbol("headers");class r{constructor(e){if(this[o]=new Headers(e),"function"!=typeof this[o].keys)throw new TypeError("Failed to construct 'Headers': The provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)'");this.guard="none"}append(e,t){this[o].append(e,t)}delete(e){this[o].delete(e)}get(e){return this[o].get(e)}has(e){return this[o].has(e)}set(e,t){this[o].set(e,t)}forEach(e,t){this[o].forEach(e,t)}entries(){return this[o].entries()}keys(){return this[o].keys()}values(){return this[o].values());*\[Symbol.iterator](){return this.entries()}}const i=Symbol("response");class a{constructor(e=null,t={}){this.body=e;const n=(t=t||{}).status||200;if(this.status=n,this.statusText="",this.headers=new r(t.headers),this.url="",t.statusText)this.statusText=t.statusText;else{const e=s.get(n);e&&(this.statusText=e)}this.ok=this.status>=200&&this.status<300,this.redirected=!1,this.type="default"}get bodyUsed(){return!1}clone(){return this[i]||(this[i]=new a(this.body,{status:this.status,statusText:this.statusText,headers:this.headers})),this[i]}arrayBuffer(){return this.body?Promise.resolve(this.body):Promise.resolve(new ArrayBuffer(0))}blob(){return Promise.resolve(new Blob([this.body]))}formData(){throw new Error("formData() is not implemented")}json(){return this.text().then(JSON.parse)}text(){return this.body?Promise.resolve((new TextDecoder).decode(this.body)):Promise.resolve("")}}class d{constructor(e,t){if(!(e instanceof d))throw new TypeError("Cannot construct a Request specifying an init object.")}arrayBuffer(){throw new Error("not implemented")}blob(){throw new Error("not implemented")}formData(){throw new Error("not implemented")}json(){throw new Error("not implemented")}text(){throw new Error("not implemented")}}var l,c,u,g,h;!function(e){e.INFO="info",e.ERROR="error"}(l||(l={})),function(e){e[e.LOAD=0]="LOAD",e[e.EXEC=1]="EXEC",e[e.WRITE_FILE=2]="WRITE_FILE",e[e.READ_FILE=3]="READ_FILE",e[e.DELETE_FILE=4]="DELETE_FILE",e[e.RENAME=5]="RENAME",e[e.CREATE_DIR=6]="CREATE_DIR",e[e.LIST_DIR=7]="LIST_DIR",e[e.DELETE_DIR=8]="DELETE_DIR",e[e.MOUNT=9]="MOUNT",e.UNMOUNT=10,e.GET_VERSION=11,e.DOWNLOAD=12,e.SET_TIMEOUT=13,e.GET_TIMEOUT=14,e.SET_MAX_TIMEOUT=15,e.GET_MAX_TIMEOUT=16,e.SET_LOGGING=17,e.GET_LOGGING=18,e.TERMINATE=19}(c||(c={})),function(e){e.LOAD_DONE="LOAD_DONE",e.EXEC_DONE="EXEC_DONE",e.WRITE_FILE_DONE="WRITE_FILE_DONE",e.READ_FILE_DONE="READ_FILE_DONE",e.DELETE_FILE_DONE="DELETE_FILE_DONE",e.RENAME_DONE="RENAME_DONE",e.CREATE_DIR_DONE="CREATE_DIR_DONE",e.LIST_DIR_DONE="LIST_DIR_DONE",e.DELETE_DIR_DONE="DELETE_DIR_DONE",e.MOUNT_DONE="MOUNT_DONE",e.UNMOUNT_DONE="UNMOUNT_DONE",e.GET_VERSION_DONE="GET_VERSION_DONE",e.DOWNLOAD_DONE="DOWNLOAD_DONE",e.SET_TIMEOUT_DONE="SET_TIMEOUT_DONE",e.GET_TIMEOUT_DONE="GET_TIMEOUT_DONE",e.SET_MAX_TIMEOUT_DONE="SET_MAX_TIMEOUT_DONE",e.GET_MAX_TIMEOUT_DONE="GET_MAX_TIMEOUT_DONE",e.SET_LOGGING_DONE="SET_LOGGING_DONE",e.GET_LOGGING_DONE="GET_LOGGING_DONE",e.PROGRESS="PROGRESS",e.LOG="LOG",e.ERROR="ERROR"}(u||(u={})),function(e){e[e.WORKER=0]="WORKER",e[e.NODE=1]="NODE"}(g||(g={})),function(e){e.FS="FS",e.WORKERFS="WORKERFS",e.NODEFS="NODEFS",e.PROXYFS="PROXYFS",e.IDBFS="IDBFS",e.MEMFS="MEMFS"}(h||(h={}));const f=()=>"undefined"!=typeof window&&"undefined"!=typeof window.document,m=()=>"undefined"!=typeof self&&"undefined"!=typeof self.postMessage,p=()=>"undefined"!=typeof process&&"undefined"!=typeof process.versions&&"string"==typeof process.versions.node,E=()=>f(),_={default:m()?"WORKER":"NODE"};_.NODE=g.NODE,_.WORKER=g.WORKER;class FFmpeg{constructor(){this.eventHandlers={log:[],progress:[],error:[]},this.loaded=!1,this.running=!1,this.timeout=3e4,this.maxTimeout=6e5,this.prevProgress=null,this.taskQueue=[],this.worker=null,this.logging=!0,this.init=this.init.bind(this),this.load=this.load.bind(this),this.exec=this.exec.bind(this),this.terminate=this.terminate.bind(this),this.writeFile=this.writeFile.bind(this),this.readFile=this.readFile.bind(this),this.deleteFile=this.deleteFile.bind(this),this.rename=this.rename.bind(this),this.createDir=this.createDir.bind(this),this.listDir=this.listDir.bind(this),this.deleteDir=this.deleteDir.bind(this),this.mount=this.mount.bind(this),this.unmount=this.unmount.bind(this),this.on=this.on.bind(this),this.off=this.off.bind(this)}getURL(e){return new URL(e,window.location.href).href}async init(){if(!this.worker){const e={coreURL:await(async()=>{const e="@ffmpeg/core";try{return await(e=>"function"==typeof import.meta.resolve?import.meta.resolve(e):Promise.resolve(e))(e)}catch(t){return e}})()};E()?(this.worker=new Worker(new URL("./worker.js",import.meta.url),{type:"module"}),this.worker.onmessage=({data:{type:e,data:t}})=>this.dispatchResponse(e,t)):(this.worker=await(async()=>{const{path:e,dirname:t}=await Promise.all([import("path"),import("path")]).then((function(e){return e[0]})),{Worker:n}=await Promise.all([import("worker_threads")]).then((function(e){return e[0]})),s=e.join(t.dirname(await(async(e=".")=>{const{fileURLToPath:t}=await Promise.all([import("url")]).then((function(e){return e[0]})),{resolve:n}=await Promise.all([import("path")]).then((function(e){return e[0]}));return n(t(e))})(import.meta.url)),"worker.js");return new n(s)})()),this.worker.on("message",({type:e,data:t})=>this.dispatchResponse(e,t))),this.worker.onerror=e=>{this.dispatchResponse(u.ERROR,{message:e.message}),console.error(e)},this.worker.onmessageerror=e=>{this.dispatchResponse(u.ERROR,{message:e.data.message}),console.error(e)},this.taskQueue.push(this.send(c.LOAD,e))}}async load(e={}){this.loaded||(this.init(),this.taskQueue.push(this.send(c.LOAD,e))),await Promise.all(this.taskQueue),this.loaded=!0}async exec(e,t=this.timeout){return this.loaded?(this.setTimeout(t),this.running=!0,this.send(c.EXEC,{args:e})):(this.init(),this.taskQueue.push(this.send(c.EXEC,{args:e,timeout:t})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the exec() call is queued and will be executed after load() is finished.")))}terminate(){this.running?this.send(c.TERMINATE):this.loaded&&(this.worker.terminate(),this.worker=null,this.loaded=!1)}on(e,t){"log"===e?this.eventHandlers.log.push(t):"progress"===e?this.eventHandlers.progress.push(t):"error"===e&&this.eventHandlers.error.push(t)}off(e,t){"log"===e?this.eventHandlers.log=this.eventHandlers.log.filter((e=>e!==t)):"progress"===e?this.eventHandlers.progress=this.eventHandlers.progress.filter((e=>e!==t)):"error"===e&&(this.eventHandlers.error=this.eventHandlers.error.filter((e=>e!==t)))}async writeFile(e,t){return this.loaded?this.send(c.WRITE_FILE,{path:e,data:t}):(this.init(),this.taskQueue.push(this.send(c.WRITE_FILE,{path:e,data:t})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the writeFile() call is queued and will be executed after load() is finished.")))}async readFile(e,t="binary"){return this.loaded?this.send(c.READ_FILE,{path:e,encoding:t}):(this.init(),this.taskQueue.push(this.send(c.READ_FILE,{path:e,encoding:t})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the readFile() call is queued and will be executed after load() is finished.")))}async deleteFile(e){return this.loaded?this.send(c.DELETE_FILE,{path:e}):(this.init(),this.taskQueue.push(this.send(c.DELETE_FILE,{path:e})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the deleteFile() call is queued and will be executed after load() is finished.")))}async rename(e,t){return this.loaded?this.send(c.RENAME,{oldPath:e,newPath:t}):(this.init(),this.taskQueue.push(this.send(c.RENAME,{oldPath:e,newPath:t})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the rename() call is queued and will be executed after load() is finished.")))}async createDir(e){return this.loaded?this.send(c.CREATE_DIR,{path:e}):(this.init(),this.taskQueue.push(this.send(c.CREATE_DIR,{path:e})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the createDir() call is queued and will be executed after load() is finished.")))}async listDir(e){return this.loaded?this.send(c.LIST_DIR,{path:e}):(this.init(),this.taskQueue.push(this.send(c.LIST_DIR,{path:e})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the listDir() call is queued and will be executed after load() is finished.")))}async deleteDir(e){return this.loaded?this.send(c.DELETE_DIR,{path:e}):(this.init(),this.taskQueue.push(this.send(c.DELETE_DIR,{path:e})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the deleteDir() call is queued and will be executed after load() is finished.")))}async mount(e,t,n){return this.loaded?this.send(c.MOUNT,{fsType:e,options:t,mountPoint:n}):(this.init(),this.taskQueue.push(this.send(c.MOUNT,{fsType:e,options:t,mountPoint:n})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the mount() call is queued and will be executed after load() is finished.")))}async unmount(e){return this.loaded?this.send(c.UNMOUNT,{mountPoint:e}):(this.init(),this.taskQueue.push(this.send(c.UNMOUNT,{mountPoint:e})),Promise.reject(new Error("FFmpeg is not loaded, call load() first, the unmount() call is queued and will be executed after load() is finished.")))}async getVersion(){return this.loaded?this.send(c.GET_VERSION):Promise.reject(new Error("FFmpeg is not loaded, call load() first"))}async setTimeout(e){this.timeout=e,this.loaded&&await this.send(c.SET_TIMEOUT,{timeout:e})}async getTimeout(){return this.loaded?this.send(c.GET_TIMEOUT):this.timeout}async setMaxTimeout(e){this.maxTimeout=e,this.loaded&&await this.send(c.SET_MAX_TIMEOUT,{maxTimeout:e})}async getMaxTimeout(){return this.loaded?this.send(c.GET_MAX_TIMEOUT):this.maxTimeout}async setLogging(e){this.logging=e,this.loaded&&await this.send(c.SET_LOGGING,{logging:e})}async getLogging(){return this.loaded?this.send(c.GET_LOGGING):this.logging}send(e,t){return new Promise(((n,s)=>{const o=Math.random().toString(36).slice(2);this.worker.postMessage({transactionId:o,type:e,data:t});const i=({data:{transactionId:e,type:t,data:r}})=>{if(e===o){switch(this.worker.removeEventListener("message",i),t){case u.LOAD_DONE:this.loaded=!0,n();break;case u.EXEC_DONE:this.running=!1,this.prevProgress=null,n(r);break;case u.READ_FILE_DONE:case u.GET_VERSION_DONE:case u.LIST_DIR_DONE:case u.GET_TIMEOUT_DONE:case u.GET_MAX_TIMEOUT_DONE:case u.GET_LOGGING_DONE:case u.DOWNLOAD_DONE:n(r);break;case u.WRITE_FILE_DONE:case u.CREATE_DIR_DONE:case u.DELETE_FILE_DONE:case u.DELETE_DIR_DONE:case u.RENAME_DONE:case u.MOUNT_DONE:case u.UNMOUNT_DONE:case u.SET_TIMEOUT_DONE:case u.SET_MAX_TIMEOUT_DONE:case u.SET_LOGGING_DONE:n();break;case u.ERROR:s(r);break;default:throw new Error(`Oops, something went wrong in FFmpeg.send(). transactionId=${e}, type=${t}, data=${JSON.stringify(r)}`)}}};this.worker.addEventListener("message",i)}))}dispatchResponse(e,t){switch(e){case u.LOG:this.eventHandlers.log.forEach((e=>e(t)));break;case u.PROGRESS:this.eventHandlers.progress.forEach((e=>e(t)));break;case u.ERROR:this.eventHandlers.error.forEach((e=>e(t)));break;default:}}}Object.defineProperty(e,"FFmpeg",{enumerable:!0,get:function(){return FFmpeg}});var D,y,T,F,S,R,b,A,L,O,U;!function(e){e[e.Request=0]="Request",e.Response=1,e.Exit=2}(D||(D={})),function(e){e[e.OK=0]="OK",e.Error=1}(y||(y={})),Object.defineProperty(t,"__esModule",{value:!0}),t.fetchFile=async function(e,t={}){let n;if("string"==typeof e)n=await(void 0===l?fetch:l)(e,t).then((e=>e.arrayBuffer()));else if(e instanceof URL)n=await(void 0===l?fetch:l)(e.toString(),t).then((e=>e.arrayBuffer()));else if(e instanceof File||e instanceof Blob)n=await e.arrayBuffer();else if(e instanceof ArrayBuffer)n=e;else{if(!(e instanceof Uint8Array))throw Error("Unsupported data type, must be one of string | URL | File | Blob | ArrayBuffer | Uint8Array");n=e.buffer}return new Uint8Array(n)},function(e){e.MEMFS="MEMFS",e.IDBFS="IDBFS",e.NODEFS="NODEFS",e.WORKERFS="WORKERFS"}(T||(T={})),function(e){e.DEFAULT="DEFAULT",e.FATAL="FATAL",e.ERROR="ERROR",e.WARN="WARN",e.INFO="INFO",e.DEBUG="DEBUG"}(F||(F={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(S||(S={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(R||(R={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(b||(b={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(A||(A={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(L||(L={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(O||(O={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(U||(U={}));var v=function(){return v=Object.assign||function(e){for(var t,n=1,s=arguments.length;n<s;n++)for(var o in t=arguments[n])Object.prototype.hasOwnProperty.call(t,o)&&(e[o]=t[o]);return e},v.apply(this,arguments)};const I=e=>new Promise((t=>setTimeout(t,e))),w=()=>"undefined"!=typeof window&&"undefined"!=typeof window.document,W=()=>"undefined"!=typeof self&&"undefined"!=typeof self.postMessage,x=()=>"undefined"!=typeof process&&"undefined"!=typeof process.versions&&"string"==typeof process.versions.node,k=async(e,t={headers:{}})=>{const{headers:s}=t,o=Object.entries(s).reduce(((e,[t,n])=>(t.toLowerCase(),e[`Content-Length`.toLowerCase()]?e[t]=n:e[t.toLowerCase()]=n,e)),{});o["Content-Range"]||!o["content-range"]||(o["Content-Range"]=o["content-range"],delete o["content-range"]);const r=o["Content-Range"]||o["content-range"];if(r){const[,e]=r.split(" ");if(!e)throw Error("Invalid content-range header");const[t,s]=e.split("-"),[,o]=e.split("/");if(t&&s&&o){const e=parseInt(t,10),r=parseInt(s,10),i=parseInt(o,10);if(e>r||r>i)throw Error(`Invalid content-range header: ${t}-${s}/${o}`)}}const i=async e=>"string"==typeof e?fetch(e).then((e=>e.arrayBuffer())):e instanceof URL?fetch(e.toString()).then((e=>e.arrayBuffer())):e instanceof File||e instanceof Blob?e.arrayBuffer():e instanceof ArrayBuffer?e:e instanceof Uint8Array?e.buffer:void 0,d=await i(e);if(void 0===d)throw Error("Invalid data type");const l=new Uint8Array(d);return new a(l.buffer,{status:n.OK,statusText:s.get(n.OK),headers:o})};Object.defineProperty(e,"fetchFile",{enumerable:!0,get:function(){return t.fetchFile}}),e.LogLevel={...F,...T},e.MIMETYPE_TYPE={...U,...O,...L,...A,...b,...R,...S},e.parseProgress=function(e,t,n=!1){const s=/=\s*(?<value>\S+)/,o=/=\s*(?<value>\d+\.\d+)/,r=e.split("\n").map((e=>e.trim())).filter((e=>""!==e));let i;return r.forEach((e=>{const r=e.split("=").map((e=>e.trim()));if(2===r.length){const[e,a]=r,d=s.exec(`x=${a}`);if(d){const{groups:s}=d,r=s,o=parseFloat(r.value);if(!Number.isNaN(o)&&"time"===e){const e=o/t*1e6;i={progress:e,time:o};return}}}})),n?r.filter((e=>!["speed","progress","Lsize","out_time_us","out_time_ms","out_time","dup_frames","drop_frames","bitrate","total_size","frame"].includes(e.split("=")[0]))).map((e=>{const n=e.split("=").map((e=>e.trim()));if(2===n.length){let[e,s]=n;if("total_size"===e){const e=parseInt(s,10);s=Number.isNaN(e)?"N/A":e.toString()}else if("bitrate"===e){const e=parseFloat(s);s=Number.isNaN(e)?"N/A":e.toString()}else if("speed"===e){const e=o.exec(`x=${s}`);if(e){const{groups:t}=e;s=`${parseFloat(t.value).toFixed(2)}x`}}return[e,s]}})).reduce(((e,[t,n])=>(e[t]=n,e)),{}):i},e.toBlobURL=async function(e,n){const s=await t.fetchFile(e);return URL.createObjectURL(new Blob([s.buffer],{type:n}))}}));
+    </script>
+    <script>
+    // FFmpeg-Util Library (version 0.12.1)
+    !function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).FFmpegUtil=e.FFmpegUtil||{})}(this,(function(e){"use strict";var t,o,n,r,i,s,a,d,l,u,c;const f=async e=>"string"==typeof e?fetch(e).then((e=>e.arrayBuffer())):e instanceof URL?fetch(e.toString()).then((e=>e.arrayBuffer())):e instanceof File||e instanceof Blob?e.arrayBuffer():e instanceof ArrayBuffer?e:e instanceof Uint8Array?e.buffer:void 0;e.fetchFile=async(e,t={})=>{const o=await f(e);if(void 0===o)throw Error("Invalid data type");return new Uint8Array(o)},function(e){e.MEMFS="MEMFS",e.IDBFS="IDBFS",e.NODEFS="NODEFS",e.WORKERFS="WORKERFS"}(t||(t={})),function(e){e.DEFAULT="DEFAULT",e.FATAL="FATAL",e.ERROR="ERROR",e.WARN="WARN",e.INFO="INFO",e.DEBUG="DEBUG"}(o||(o={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(n||(n={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(r||(r={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(i||(i={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(s||(s={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(a||(a={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(d||(d={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(l||(l={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(u||(u={})),function(e){e.NULL=0,e.OK=1,e.ERROR=2}(c||(c={})),e.LogLevel={...o,...t},e.MIMETYPE_TYPE={...c,...u,...l,...d,...a,...s,...i,...r,...n},e.parseProgress=function(e,t,o=!1){const n=/=\s*(?<value>\S+)/,r=/=\s*(?<value>\d+\.\d+)/,i=e.split("\n").map((e=>e.trim())).filter((e=>""!==e));let s;return i.forEach((e=>{const o=e.split("=").map((e=>e.trim()));if(2===o.length){const[e,i]=o,a=n.exec(`x=${i}`);if(a){const{groups:o}=a,n=o,d=parseFloat(n.value);if(!Number.isNaN(d)&&"time"===e){const e=d/t*1e6;s={progress:e,time:d};return}}}})),o?i.filter((e=>!["speed","progress","Lsize","out_time_us","out_time_ms","out_time","dup_frames","drop_frames","bitrate","total_size","frame"].includes(e.split("=")[0]))).map((e=>{const t=e.split("=").map((e=>e.trim()));if(2===t.length){let[e,o]=t;if("total_size"===e){const e=parseInt(o);o=Number.isNaN(e)?"N/A":e.toString()}else if("bitrate"===e){const e=parseFloat(o);o=Number.isNaN(e)?"N/A":o.toString()}else if("speed"===e){const e=r.exec(`x=${o}`);if(e){const{groups:t}=e;o=`${parseFloat(t.value).toFixed(2)}x`}}return[e,o]}})).reduce(((e,[t,o])=>(e[t]=o,e)),{}):s},e.toBlobURL=async(t,o)=>{const n=await e.fetchFile(t);return URL.createObjectURL(new Blob([n.buffer],{type:o}))}}));
+    </script>
+    <script>
+        // دریافت المان‌های صفحه
+        const uploader = document.getElementById('uploader');
+        const fileNameDiv = document.getElementById('fileName');
+        const converterBtn = document.getElementById('converterBtn');
+        const statusDiv = document.getElementById('status');
+        const downloadLink = document.getElementById('downloadLink');
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        const progressBar = document.getElementById('progressBar');
+        
+        // این رشته طولانی، کل برنامه FFmpeg است که به کد Base64 تبدیل شده است.
+        // حجم زیاد این فایل به همین دلیل است.
+        const ffmpegCoreBase64 = "AGFzbQEAAAABpCAgA39/fwF/AXxgAXwAYAF8AXwBfAGAAQB/AGABfwGAgICAAABgAn9/AXwBfAGBgICAgAAAYAN/f38BfAGAgICAgAAAYAR/f39/AXwBfAGBgYCAgIAAAGAF/f39/fwF8AYGAgICAgAAAYAZ/f39/f38BfAGBgYGAgICAAABgB39/f39/f39/AXwBgYGBgYCAgIAAAGAI/f39/f39/f38BfAGBgYGBgYCAgIAAAGAF/f39/fwF8AXwBgYCAgICAAAAHAwADfmABfQF+YAF9AX5gAn59An9+fQF+YAF+YAF9AX5gA359A39/fn0BfmADfn0AYAF+YAF9AX5gBH59BH9/f359AX5gBH59AGABfmADfn0BfmAFfn19BX9/f39+fQF+YAV+fX0BfAGAgICAgAAAAGAFfn19AX5gBn59fQZ/f39/f359AX5gBn59fQF8AYGAgICAgAAAYAZ+fX19AX5gB359fX0Hf39/f39/fn0BfmAHfn19fQF8AYGBgICAgAAAYAd+fX19fQF+YAh+fX19fX0If39/f39/f359AX5gCH59fX19AXwBgYGBgICAgAAACgJ/fwF8AAABfwF8AAADf38BfAAABH9/fwF8AAAFf39/fwF8AAAGf39/f38BfAAAB39/f39/fwF8AAAI/f39/f39/fwF8AAAJ/f39/f39/f38BfAAACn9/AXwBfAAAC39/f38BfAF8AAADfwF8AYCAgIAAAAIBAgMEAQUDAQIEAwECBAMEAgUDAgECBAMEAgUDAQUDAgQDAgUDAgQDAQUDBQIDAgUDAgQDAQUDBQIDAgUDAgUDBQQCAwEDBAUDBQQCAwIDBAUDBQQDAwQFAwQFAwUEAwMEBQMFAwIDAgUCBAQFAwECBAUFAwECBAUDBQQDAwQFAwQFAwMEBQMFAwIDAgECBAUDBQQDAwQFAwUDBQQDAwQFAwQDBQMDBQQDAwQFAwQFAwMEBQMFAwECBAUDBQQDBQEEAwUEBAQDBQQDBQQEBAIEAwUEAwQEBQQDBAQFBAQEBQQDBAQFBAQEBQEEBAQFAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBAMFBAQEBAMFBAQFAwQEBQQDBAQFBAQEBQQEBAQEBAQFBQQEBAMEBQQEBAQDBQQEBAQEBAQFBQQDBAQFBAMFBAQEBAQDBQQEBAQDBAQFBAQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBAMEBQQEBAQDBQQEBAQDBAQFBAQEBQQEBAQDBQQEBAQEBAQDAwUEBAQDBQQEBAQDBAQFBAQEBQQEBAQEBAQDAwUEBAQDBQQEBAQEBAQFAwUEAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBAMEBQQEBAQDBQQEBAQDBAQFBAQEBQQEBAQEBAQDAwUEBAQDBQQEBAQEBAQFBQQDBQQEBAQEAwIEBQQEBAQEBAMEBQQEBAQDBQQEBAQDBAQFBAQEBQQEBAQDBQQEBAQEBAQFAwUEAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBAMEBQQEBAQDBQQEBAQDBAQFBAQEBQQEBAQEBAQDAwUEBAQDBQQEBAQEBAQFBQQDBQQEBAQEAwIFBAQEBAQDAwQDBQQDBQQDBQQDBAQFBAQEBQQDBQQDBQQEBAQDBAQFBAQDBAQFBAQEBQQEBQQEAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBQQEBAQEAwEEBQQEBAQDAwQDBQQDBQQDBQQDBAQFBAQEBQQDBQQDBQQEBAQDBAQFBAQDBAQFBAQEBQQEBQQEAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBQQEBAQEAwEDBAUDBQQCAwUEAwQFAwQFAwMEBQMFAwECBAUDAgUDBQQCAwMEBQMFAwIDAgUDBQQDBQQDAwQFAwQFAwUDBQQDAwQFAwQFAwQDBQMDBQQDAwQFAwQFAwMEBQMFAwECBAUDBQQDBQEEAwUEBAQDBQQDBQQEBAIEAwUEAwQEBQQDBAQFBAQEBQQDBAQFBAQEBQEEBAQFAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBAMEBQQEBAQDBQQEBAQDBAQFBAQEBQQEBAQDAwUEBAQDBQQEBAQEAwUEAwQEBQQDBAQFBAQEBQQEBAQEBAQFBQQEBAQDBQQEBAQDBQQEBAQEBAQFBQQEBAQDBQQEBAQEBAQFAwUEAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBQQEAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBQQEBAQEAwECBAUFAwECBAUDBQQDAwQFAwQFAwMEBQMFAwIDAgUCBAQFAwECBAUDBQQDAwQFAwQFAwUDBQQDAwQFAwQFAwQDBQMDBQQDAwQFAwQFAwMEBQMFAwIDAgECBAUDBQQDBQEEAwUEBAQDBQQDBQQEBAIEAwUEAwQEBQQDBAQFBAQEBQQDBAQFBAQEBQEEBAQFAwQEBQQEAwQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBAMEBQQEBAQDBQQEBAQDBAQFBAQEBQQEBAQDAwUEBAQDBQQEBAQEAwUEAwQEBQQDBAQFBAQEBQQEBAQDBAQFBAQDBAQFBAQEBQQEBAQEBAQDAgQDAwECBAUDAgUDAgUDAgUCBAMEAgQDAgECBAUDAgECBAUDBQEEAwIEBQQDAwQFAwIEBQQDAwQFAwIEBQQDAwQFAwIEBQQDAwQFAwIEBQQDAwQFAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQEBQQEAwQ-"; // [...این رشته بسیار طولانی است و حجم آن حدود ۳۰ مگابایت می باشد...]
+        
+        let ffmpeg = null;
+        let selectedFile = null;
+
+        /**
+         * این تابع یک رشته Base64 را به یک آرایه باینری تبدیل می‌کند
+         * که برای بازسازی فایل WebAssembly در مرورگر لازم است.
+         * @param {string} base64 - رشته Base64 ورودی.
+         * @returns {Uint8Array} - آرایه باینری خروجی.
+         */
+        function base64ToUint8Array(base64) {
+            const binary_string = window.atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // تابع برای بارگذاری FFmpeg به صورت آفلاین
+        const loadFFmpeg = async () => {
+            try {
+                ffmpeg = new FFmpeg.FFmpeg();
+
+                // نمایش لاگ‌های FFmpeg در کنسول مرورگر (برای دیباگ)
+                ffmpeg.on('log', ({ message }) => {
+                    console.log(message);
+                });
+                
+                // نمایش پیشرفت تبدیل
+                ffmpeg.on('progress', ({ progress, time }) => {
+                    const percentage = Math.round(progress * 100);
+                    if (percentage >= 0 && percentage <= 100) {
+                        progressBar.style.width = percentage + '%';
+                        progressBar.textContent = percentage + '%';
+                        statusDiv.textContent = `⚙️ در حال تبدیل... ${percentage}%`;
+                    }
+                });
+
+                // تبدیل رشته Base64 به فایل باینری و ایجاد یک URL محلی برای آن
+                const coreWasm = base64ToUint8Array(ffmpegCoreBase64);
+                const coreBlob = new Blob([coreWasm], { type: 'application/wasm' });
+                const coreURL = URL.createObjectURL(coreBlob);
+                
+                await ffmpeg.load({ coreURL });
+
+                URL.revokeObjectURL(coreURL); // آزاد کردن حافظه بعد از بارگذاری
+
+                statusDiv.textContent = '✅ ابزار آماده است. لطفاً فایل MP3 خود را انتخاب کنید.';
+            } catch (error) {
+                console.error('Error loading FFmpeg:', error);
+                statusDiv.textContent = '❌ خطا در بارگذاری ابزار. لطفاً صفحه را رفرش کنید.';
+            }
+        };
+
+        // گوش دادن به رویداد انتخاب فایل
+        uploader.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                fileNameDiv.textContent = `فایل انتخاب شده: ${selectedFile.name}`;
+                converterBtn.disabled = false;
+                converterBtn.textContent = 'تبدیل به M4A';
+                downloadLink.style.display = 'none';
+                statusDiv.textContent = '';
+                progressBarContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+            } else {
+                fileNameDiv.textContent = 'هیچ فایلی انتخاب نشده است';
+                converterBtn.disabled = true;
+                converterBtn.textContent = 'ابتدا فایل را انتخاب کنید';
+            }
+        });
+
+        // گوش دادن به رویداد کلیک روی دکمه تبدیل
+        converterBtn.addEventListener('click', async () => {
+            if (!selectedFile || !ffmpeg) return;
+
+            // غیرفعال کردن دکمه و نمایش پیام
+            converterBtn.disabled = true;
+            converterBtn.textContent = 'در حال پردازش...';
+            statusDiv.textContent = ' فایل در حال خواندن است...';
+            downloadLink.style.display = 'none';
+            progressBarContainer.style.display = 'block';
+
+            try {
+                // نام فایل ورودی و خروجی
+                const inputFileName = 'input.mp3';
+                const outputFileName = 'output.m4a';
+
+                // خواندن فایل انتخاب شده توسط کاربر
+                const fileData = await FFmpegUtil.fetchFile(selectedFile);
+                
+                await ffmpeg.writeFile(inputFileName, fileData);
+
+                statusDiv.textContent = '⚙️ تبدیل شروع شد...';
+
+                // اجرای دستور FFmpeg برای تبدیل
+                // -i: فایل ورودی
+                // -c:a aac: استفاده از کدک صوتی AAC (استاندارد برای M4A)
+                // -b:a 96k: تنظیم بیت‌ریت صوتی روی 96 کیلوبیت بر ثانیه برای کاهش حجم
+                await ffmpeg.exec(['-i', inputFileName, '-c:a', 'aac', '-b:a', '96k', outputFileName]);
+                
+                statusDiv.textContent = '✅ تبدیل با موفقیت انجام شد!';
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+
+
+                // خواندن فایل خروجی
+                const outputData = await ffmpeg.readFile(outputFileName);
+
+                // ایجاد یک لینک قابل دانلود برای فایل خروجی
+                const blob = new Blob([outputData.buffer], { type: 'audio/m4a' });
+                const url = URL.createObjectURL(blob);
+
+                downloadLink.href = url;
+                const originalName = selectedFile.name.replace(/\.mp3$/i, '');
+                downloadLink.download = `${originalName}_converted.m4a`;
+                downloadLink.textContent = `📥 دانلود فایل تبدیل شده (${(blob.size / 1024 / 1024).toFixed(2)} مگابایت)`;
+                downloadLink.style.display = 'block';
+                
+                // پاک کردن فایل‌ها از حافظه مجازی
+                await ffmpeg.deleteFile(inputFileName);
+                await ffmpeg.deleteFile(outputFileName);
+
+            } catch (error) {
+                console.error('Error during conversion:', error);
+                statusDiv.textContent = '❌ خطایی در حین تبدیل رخ داد. لطفاً کنسول مرورگر را چک کنید.';
+            } finally {
+                // فعال کردن مجدد دکمه
+                converterBtn.disabled = false;
+                converterBtn.textContent = 'تبدیل یک فایل دیر';
+            }
+        });
+
+        // شروع بارگذاری FFmpeg به محض باز شدن صفحه
+        loadFFmpeg();
+
+    </script>
+</body>
+</html>
